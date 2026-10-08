@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RL Init and Stability</title>
+  <meta name="description" content="A literature review and live in-browser demo of how weight initialization shapes training stability in deep reinforcement learning.">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="module" src="js/site.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="index.html">RL Init and Stability</a>
+      <nav class="nav">
+        <a href="index.html" aria-current="page">Overview</a>
+        <a href="literature.html">Literature</a>
+        <a href="demo.html">Live lab</a>
+      </nav>
+      <button class="theme-toggle" type="button">Theme: system</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <h1>Initialization and training stability in deep RL</h1>
+    <p class="lede">
+      Reinforcement learning keeps changing its own training targets, which makes it much harder on neural networks than supervised learning.
+      This site collects what the research says about how a network's <em>starting point</em> and its later health decide whether training stays stable.
+      It also lets you watch it happen in a PPO agent that trains live in your browser.
+    </p>
+
+    <div class="cards">
+      <a class="card" href="literature.html">
+        <div class="kicker">Literature review</div>
+        <h3><span id="paper-count">68</span> papers in 7 themes</h3>
+        <p>Init theory, PPO implementation details, value divergence, plasticity loss, resets, normalization and evaluation, each with its key finding and why it matters.</p>
+      </a>
+      <a class="card" href="demo.html#lab">
+        <div class="kicker">Live lab</div>
+        <h3>Train PPO on CartPole</h3>
+        <p>Compare seven init schemes side by side, across seeds, while tracking return, entropy, gradient and weight norms, dormant neurons and feature rank.</p>
+      </a>
+      <a class="card" href="demo.html#signal">
+        <div class="kicker">Signal propagation</div>
+        <h3>Watch signals vanish or explode</h3>
+        <p>Push random inputs through deep networks and see how each init scheme preserves, or destroys, activations and gradients layer by layer.</p>
+      </a>
+    </div>
+
+    <h2>Seven things the literature agrees on</h2>
+    <ol class="findings">
+      <li>
+        <b>Scale weights to the layer's width and activation.</b>
+        <span>Variance of about 1/fan-in (LeCun), 2/(fan-in + fan-out) (Xavier) or 2/fan-in for ReLU (He) keeps signals from vanishing or exploding with depth. Orthogonal matrices do this exactly for linear networks.
+        <a href="literature.html#1502.01852">He et al. 2015</a>, <a href="literature.html#1312.6120">Saxe et al. 2014</a>, <a href="literature.html#1611.01232">Schoenholz et al. 2017</a>.</span>
+      </li>
+      <li>
+        <b>Initialize the policy head small.</b>
+        <span>Shrinking the last policy layer's weights about 100x so the initial policy is near-uniform was one of the most robust recommendations in a study of more than 250,000 PPO agents.
+        <a href="literature.html#2006.05990">Andrychowicz et al. 2021</a>, <a href="literature.html#ppo37">Huang et al. 2022</a>.</span>
+      </li>
+      <li>
+        <b>"Implementation details" are often the real algorithm.</b>
+        <span>Orthogonal init, gradient clipping and advantage normalization explain much of PPO's edge over TRPO, and results vary sharply with seed.
+        <a href="literature.html#2005.12729">Engstrom et al. 2020</a>, <a href="literature.html#1709.06560">Henderson et al. 2018</a>.</span>
+      </li>
+      <li>
+        <b>Networks lose plasticity as they train on RL's moving targets.</b>
+        <span>Symptoms include dormant neurons, collapsing feature rank, growing weight norms and sharpening curvature. No single metric explains it all.
+        <a href="literature.html#2302.12902">Sokar et al. 2023</a>, <a href="literature.html#2010.14498">Kumar et al. 2021</a>, <a href="literature.html#2402.18762">Lyle et al. 2024</a>.</span>
+      </li>
+      <li>
+        <b>Going back toward initialization helps.</b>
+        <span>Resetting layers, shrink-and-perturb, recycling dormant units and regularizing toward the initial weights all restore plasticity. In this setting the init is a resource, not just a starting point.
+        <a href="literature.html#2205.07802">Nikishin et al. 2022</a>, <a href="literature.html#1910.08475">Ash and Adams 2020</a>, <a href="literature.html#2308.11958">Kumar et al. 2023</a>.</span>
+      </li>
+      <li>
+        <b>Normalization is now the main stabilizer.</b>
+        <span>LayerNorm, together with norm control on weights, prevents many failures that resets and target networks used to patch, and lets RL networks scale up.
+        <a href="literature.html#2407.04811">Gallici et al. 2025</a>, <a href="literature.html#2410.09754">Lee et al. 2025</a>, <a href="literature.html#2403.00514">Nauman et al. 2024</a>.</span>
+      </li>
+      <li>
+        <b>Judge stability across seeds, with intervals.</b>
+        <span>A single training curve says little. Report robust aggregates with confidence intervals over many runs.
+        <a href="literature.html#2108.13264">Agarwal et al. 2021</a>.</span>
+      </li>
+    </ol>
+
+    <div class="callout">
+      <b>What the live lab shows honestly:</b> CartPole is easy, so with a shallow network most inits eventually reach the maximum return of 500.
+      The differences show up first in the network's health: initial policy entropy, saturated or dormant units, weight norm and feature rank.
+      Switch to ReLU to see init change the learning curve too: with N(0, 1) weights about half the units start dormant, the policy starts almost deterministic, and early learning lags.
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Literature checked against arXiv on 2026-10-08. All training runs locally in your browser, and nothing is sent anywhere.</div>
+  </footer>
+</body>
+</html>

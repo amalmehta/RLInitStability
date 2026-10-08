@@ -1,0 +1,1571 @@
+{
+ "generated": "2026-10-08",
+ "themes": [
+  {
+   "id": "init",
+   "title": "Initialization and signal propagation",
+   "short": "Init and signal propagation",
+   "summary": "How the scale and structure of initial weights decide whether signals and gradients survive a forward and backward pass. This is the general deep-learning theory that RL initialization recipes build on."
+  },
+  {
+   "id": "pg",
+   "title": "Policy-gradient implementation details",
+   "short": "Policy-gradient details",
+   "summary": "Large ablation studies of PPO-style agents, where small choices such as last-layer init, orthogonal weights, gradient clipping and advantage normalization turn out to matter as much as the algorithm."
+  },
+  {
+   "id": "value",
+   "title": "Value learning, divergence and the deadly triad",
+   "short": "Value learning and divergence",
+   "summary": "Why bootstrapped value learning with function approximation is fragile: divergence, overestimation, feature collapse, and the regularizers that counter them."
+  },
+  {
+   "id": "plasticity",
+   "title": "Plasticity loss and dormant neurons",
+   "short": "Plasticity and dormant neurons",
+   "summary": "Networks trained on RL's shifting targets gradually lose the ability to fit new targets. This shows up as dormant neurons, collapsing feature rank, growing weight norms and sharp curvature."
+  },
+  {
+   "id": "reset",
+   "title": "Resets and plasticity interventions",
+   "short": "Resets and interventions",
+   "summary": "Remedies that partly re-initialize or re-randomize the network during training: full or partial resets, shrink-and-perturb, plasticity injection, continual backprop and regularizing toward the initialization."
+  },
+  {
+   "id": "arch",
+   "title": "Normalization and architectures for stable scaling",
+   "short": "Normalization and scaling",
+   "summary": "Layer, batch, weight and spectral normalization, residual blocks and other architecture choices that let RL networks grow larger and train with higher replay ratios without diverging."
+  },
+  {
+   "id": "eval",
+   "title": "Evaluation and reproducibility",
+   "short": "Evaluation",
+   "summary": "How to tell whether a stability improvement is real: seed variance, confidence intervals and reporting practice."
+  }
+ ],
+ "papers": [
+  {
+   "id": "glorot2010",
+   "arxiv": null,
+   "theme": "init",
+   "venue": "AISTATS 2010",
+   "tags": [
+    "initialization",
+    "signal propagation"
+   ],
+   "finding": "Shows that with standard random init, activations and gradients shrink or saturate with depth (especially with sigmoid), and derives a fan-in/fan-out-balanced variance: the \"Xavier\" init.",
+   "lesson": "Weight variance should depend on layer width. This is the baseline idea behind every init scheme in the demo.",
+   "title": "Understanding the difficulty of training deep feedforward neural networks",
+   "authors": [
+    "Xavier Glorot",
+    "Yoshua Bengio"
+   ],
+   "year": "2010",
+   "url": "https://proceedings.mlr.press/v9/glorot10a.html"
+  },
+  {
+   "id": "1312.6120",
+   "arxiv": "1312.6120",
+   "theme": "init",
+   "venue": "ICLR 2014",
+   "tags": [
+    "initialization",
+    "orthogonal",
+    "learning dynamics"
+   ],
+   "finding": "Solves the learning dynamics of deep linear networks exactly and shows that random orthogonal initialization gives depth-independent learning times, unlike scaled Gaussian init.",
+   "lesson": "This is the theoretical root of the orthogonal init used in almost every PPO and A2C implementation.",
+   "title": "Exact solutions to the nonlinear dynamics of learning in deep linear neural networks",
+   "authors": [
+    "Andrew M. Saxe",
+    "James L. McClelland",
+    "Surya Ganguli"
+   ],
+   "year": "2013",
+   "url": "https://arxiv.org/abs/1312.6120"
+  },
+  {
+   "id": "1511.06422",
+   "arxiv": "1511.06422",
+   "theme": "init",
+   "venue": "ICLR 2016",
+   "tags": [
+    "initialization",
+    "data-dependent"
+   ],
+   "finding": "LSUV: start from orthogonal weights, then rescale each layer on a data batch so its output has unit variance.",
+   "lesson": "Data-dependent init is a cheap way to fix scale when analytic formulas don't match the architecture.",
+   "title": "All you need is a good init",
+   "authors": [
+    "Dmytro Mishkin",
+    "Jiri Matas"
+   ],
+   "year": "2015",
+   "url": "https://arxiv.org/abs/1511.06422"
+  },
+  {
+   "id": "1502.01852",
+   "arxiv": "1502.01852",
+   "theme": "init",
+   "venue": "ICCV 2015",
+   "tags": [
+    "initialization",
+    "ReLU"
+   ],
+   "finding": "Derives a weight variance of 2/fan_in that preserves activation variance through ReLU layers, which made very deep rectifier networks trainable from scratch.",
+   "lesson": "The right scale depends on the activation; ReLU networks need roughly twice the Xavier variance.",
+   "title": "Delving Deep into Rectifiers: Surpassing Human-Level Performance on ImageNet Classification",
+   "authors": [
+    "Kaiming He",
+    "Xiangyu Zhang",
+    "Shaoqing Ren",
+    "Jian Sun"
+   ],
+   "year": "2015",
+   "url": "https://arxiv.org/abs/1502.01852"
+  },
+  {
+   "id": "1611.01232",
+   "arxiv": "1611.01232",
+   "theme": "init",
+   "venue": "ICLR 2017",
+   "tags": [
+    "signal propagation",
+    "trainability"
+   ],
+   "finding": "Shows that signals propagate only to a finite depth scale away from the order-to-chaos boundary, and networks deeper than that scale cannot be trained.",
+   "lesson": "Initializing at the \"edge of chaos\" is what makes depth trainable.",
+   "title": "Deep Information Propagation",
+   "authors": [
+    "Samuel S. Schoenholz",
+    "Justin Gilmer",
+    "Surya Ganguli",
+    "Jascha Sohl-Dickstein"
+   ],
+   "year": "2016",
+   "url": "https://arxiv.org/abs/1611.01232"
+  },
+  {
+   "id": "1606.05340",
+   "arxiv": "1606.05340",
+   "theme": "init",
+   "venue": "NeurIPS 2016",
+   "tags": [
+    "signal propagation",
+    "mean field"
+   ],
+   "finding": "Uses mean-field theory to show that random deep networks have an ordered and a chaotic phase, set by the weight and bias variances.",
+   "lesson": "Init variance moves a network between vanishing and exploding signal regimes. The signal-propagation explorer visualizes exactly this.",
+   "title": "Exponential expressivity in deep neural networks through transient chaos",
+   "authors": [
+    "Ben Poole",
+    "Subhaneil Lahiri",
+    "Maithra Raghu",
+    "Jascha Sohl-Dickstein",
+    "Surya Ganguli"
+   ],
+   "year": "2016",
+   "url": "https://arxiv.org/abs/1606.05340"
+  },
+  {
+   "id": "1607.06450",
+   "arxiv": "1607.06450",
+   "theme": "init",
+   "venue": "arXiv 2016",
+   "tags": [
+    "normalization",
+    "LayerNorm"
+   ],
+   "finding": "Layer normalization normalizes each sample's activations across features, so it works with any batch size, and online.",
+   "lesson": "LayerNorm is now the most common stabilizer in RL networks because it doesn't depend on non-stationary batch statistics.",
+   "title": "Layer Normalization",
+   "authors": [
+    "Jimmy Lei Ba",
+    "Jamie Ryan Kiros",
+    "Geoffrey E. Hinton"
+   ],
+   "year": "2016",
+   "url": "https://arxiv.org/abs/1607.06450"
+  },
+  {
+   "id": "1602.07868",
+   "arxiv": "1602.07868",
+   "theme": "init",
+   "venue": "NeurIPS 2016",
+   "tags": [
+    "normalization",
+    "weight norm"
+   ],
+   "finding": "Weight normalization reparameterizes each weight vector as a direction and a learned length, which decouples the norm from the direction and speeds optimization.",
+   "lesson": "Controlling weight norm explicitly reappears in recent RL work such as hyperspherical normalization and batch-plus-weight normalization.",
+   "title": "Weight Normalization: A Simple Reparameterization to Accelerate Training of Deep Neural Networks",
+   "authors": [
+    "Tim Salimans",
+    "Diederik P. Kingma"
+   ],
+   "year": "2016",
+   "url": "https://arxiv.org/abs/1602.07868"
+  },
+  {
+   "id": "1901.09321",
+   "arxiv": "1901.09321",
+   "theme": "init",
+   "venue": "ICLR 2019",
+   "tags": [
+    "initialization",
+    "residual",
+    "no normalization"
+   ],
+   "finding": "Fixup rescales the initialization of residual branches, zero-initializing the last layer of each branch, so very deep residual networks train without normalization layers.",
+   "lesson": "Zero or small init of a branch's final layer makes each block start as the identity. RL's small policy-head init uses the same idea.",
+   "title": "Fixup Initialization: Residual Learning Without Normalization",
+   "authors": [
+    "Hongyi Zhang",
+    "Yann N. Dauphin",
+    "Tengyu Ma"
+   ],
+   "year": "2019",
+   "url": "https://arxiv.org/abs/1901.09321"
+  },
+  {
+   "id": "2011.14522",
+   "arxiv": "2011.14522",
+   "theme": "init",
+   "venue": "ICML 2021",
+   "tags": [
+    "parameterization",
+    "muP",
+    "scaling"
+   ],
+   "finding": "Introduces the Maximal Update Parameterization (muP), which scales init and per-layer learning rates with width so features keep learning as width grows to infinity.",
+   "lesson": "Init scale and learning rate are coupled. A good scheme at one width can be wrong at another.",
+   "title": "Feature Learning in Infinite-Width Neural Networks",
+   "authors": [
+    "Greg Yang",
+    "Edward J. Hu"
+   ],
+   "year": "2020",
+   "url": "https://arxiv.org/abs/2011.14522"
+  },
+  {
+   "id": "1506.02438",
+   "arxiv": "1506.02438",
+   "theme": "pg",
+   "venue": "ICLR 2016",
+   "tags": [
+    "GAE",
+    "variance reduction"
+   ],
+   "finding": "Generalized Advantage Estimation is an exponentially weighted mix of n-step advantages, and lambda trades bias against variance.",
+   "lesson": "Lower-variance advantages make policy-gradient updates steadier. The demo uses GAE(0.95).",
+   "title": "High-Dimensional Continuous Control Using Generalized Advantage Estimation",
+   "authors": [
+    "John Schulman",
+    "Philipp Moritz",
+    "Sergey Levine",
+    "Michael Jordan",
+    "Pieter Abbeel"
+   ],
+   "year": "2015",
+   "url": "https://arxiv.org/abs/1506.02438"
+  },
+  {
+   "id": "1707.06347",
+   "arxiv": "1707.06347",
+   "theme": "pg",
+   "venue": "arXiv 2017",
+   "tags": [
+    "PPO",
+    "algorithm"
+   ],
+   "finding": "Proximal Policy Optimization optimizes a clipped surrogate objective so it can take several minibatch epochs per batch while keeping each policy update small.",
+   "lesson": "PPO is the algorithm in the live demo. Its clipping is itself a stability mechanism.",
+   "title": "Proximal Policy Optimization Algorithms",
+   "authors": [
+    "John Schulman",
+    "Filip Wolski",
+    "Prafulla Dhariwal",
+    "Alec Radford",
+    "Oleg Klimov"
+   ],
+   "year": "2017",
+   "url": "https://arxiv.org/abs/1707.06347"
+  },
+  {
+   "id": "1811.02553",
+   "arxiv": "1811.02553",
+   "theme": "pg",
+   "venue": "ICLR 2020",
+   "tags": [
+    "policy gradient",
+    "gradient estimates"
+   ],
+   "finding": "Measures how far deep policy-gradient algorithms depart from the theory that motivates them: gradient estimates are poorly correlated with the true gradient and value baselines barely reduce variance.",
+   "lesson": "Noisy updates make training sensitive to scale and init. Stability tricks partly compensate for this noise.",
+   "title": "A Closer Look at Deep Policy Gradients",
+   "authors": [
+    "Andrew Ilyas",
+    "Logan Engstrom",
+    "Shibani Santurkar",
+    "Dimitris Tsipras",
+    "Firdaus Janoos",
+    "Larry Rudolph",
+    "Aleksander Madry"
+   ],
+   "year": "2018",
+   "url": "https://arxiv.org/abs/1811.02553"
+  },
+  {
+   "id": "2005.12729",
+   "arxiv": "2005.12729",
+   "theme": "pg",
+   "venue": "ICLR 2020",
+   "tags": [
+    "PPO",
+    "code-level optimizations"
+   ],
+   "finding": "Shows that much of PPO's advantage over TRPO comes from code-level optimizations (orthogonal init, reward scaling, value clipping, learning-rate annealing), not from the clipped objective.",
+   "lesson": "Init and other unreported details can dominate algorithm comparisons.",
+   "title": "Implementation Matters in Deep Policy Gradients: A Case Study on PPO and TRPO",
+   "authors": [
+    "Logan Engstrom",
+    "Andrew Ilyas",
+    "Shibani Santurkar",
+    "Dimitris Tsipras",
+    "Firdaus Janoos",
+    "Larry Rudolph",
+    "Aleksander Madry"
+   ],
+   "year": "2020",
+   "url": "https://arxiv.org/abs/2005.12729"
+  },
+  {
+   "id": "2006.05990",
+   "arxiv": "2006.05990",
+   "theme": "pg",
+   "venue": "ICLR 2021",
+   "tags": [
+    "PPO",
+    "initialization",
+    "large-scale study"
+   ],
+   "finding": "Trains more than 250,000 agents across implementation choices. One of the strongest recommendations: initialize the policy's last layer with weights about 100x smaller, so the initial action distribution is near-uniform and independent of the observation.",
+   "lesson": "This is direct evidence that output-layer init matters in on-policy RL. The demo's \"Orthogonal + small heads\" vs \"no small heads\" comparison reproduces it in miniature.",
+   "title": "What Matters In On-Policy Reinforcement Learning? A Large-Scale Empirical Study",
+   "authors": [
+    "Marcin Andrychowicz",
+    "Anton Raichuk",
+    "Piotr Stańczyk",
+    "Manu Orsini",
+    "Sertan Girgin",
+    "Raphael Marinier",
+    "Léonard Hussenot",
+    "Matthieu Geist",
+    "Olivier Pietquin",
+    "Marcin Michalski",
+    "Sylvain Gelly",
+    "Olivier Bachem"
+   ],
+   "year": "2020",
+   "url": "https://arxiv.org/abs/2006.05990"
+  },
+  {
+   "id": "ppo37",
+   "arxiv": null,
+   "theme": "pg",
+   "venue": "ICLR Blog Track 2022",
+   "tags": [
+    "PPO",
+    "implementation details"
+   ],
+   "finding": "Catalogs 37 implementation details of the reference PPO code, including orthogonal init with gain sqrt(2) for hidden layers, 0.01 for the policy head and 1 for the value head, plus Adam epsilon 1e-5 and global gradient clipping at 0.5.",
+   "lesson": "This is the source of the exact recipe in the demo's \"Orthogonal + small heads\" scheme.",
+   "title": "The 37 Implementation Details of Proximal Policy Optimization",
+   "authors": [
+    "Shengyi Huang",
+    "Rousslan Fernand Julien Dossa",
+    "Antonin Raffin",
+    "Anssi Kanervisto",
+    "Weixun Wang"
+   ],
+   "year": "2022",
+   "url": "https://iclr-blog-track.github.io/2022/03/25/ppo-implementation-details/"
+  },
+  {
+   "id": "2206.00730",
+   "arxiv": "2206.00730",
+   "theme": "pg",
+   "venue": "NeurIPS 2022",
+   "tags": [
+    "policy churn",
+    "value-based"
+   ],
+   "finding": "Finds that in value-based agents the greedy policy changes on a large fraction of states after a single gradient step, and argues this churn acts as implicit exploration.",
+   "lesson": "Small updates can still cause large behavioral changes. Policy stability is not the same as parameter stability.",
+   "title": "The Phenomenon of Policy Churn",
+   "authors": [
+    "Tom Schaul",
+    "André Barreto",
+    "John Quan",
+    "Georg Ostrovski"
+   ],
+   "year": "2022",
+   "url": "https://arxiv.org/abs/2206.00730"
+  },
+  {
+   "id": "2405.19153",
+   "arxiv": "2405.19153",
+   "theme": "pg",
+   "venue": "NeurIPS 2024",
+   "tags": [
+    "on-policy",
+    "plasticity"
+   ],
+   "finding": "Studies plasticity loss in on-policy RL under distribution shift. Many methods that help off-policy agents fail here; regenerative methods such as shrink-and-perturb-style resets and regularization toward the initialization help.",
+   "lesson": "Interventions that keep the network close to a good initialization are a common thread.",
+   "title": "A Study of Plasticity Loss in On-Policy Deep Reinforcement Learning",
+   "authors": [
+    "Arthur Juliani",
+    "Jordan T. Ash"
+   ],
+   "year": "2024",
+   "url": "https://arxiv.org/abs/2405.19153"
+  },
+  {
+   "id": "2405.00662",
+   "arxiv": "2405.00662",
+   "theme": "pg",
+   "venue": "NeurIPS 2024",
+   "tags": [
+    "PPO",
+    "plasticity",
+    "representation collapse"
+   ],
+   "finding": "Shows that PPO agents also lose plasticity: feature rank collapses over training, which then breaks the trust region. Proposes Proximal Feature Optimization, a regularizer on feature change.",
+   "lesson": "On-policy RL is not immune to plasticity loss. The demo tracks the actor's feature rank for this reason.",
+   "title": "No Representation, No Trust: Connecting Representation, Collapse, and Trust Issues in PPO",
+   "authors": [
+    "Skander Moalla",
+    "Andrea Miele",
+    "Daniil Pyatko",
+    "Razvan Pascanu",
+    "Caglar Gulcehre"
+   ],
+   "year": "2024",
+   "url": "https://arxiv.org/abs/2405.00662"
+  },
+  {
+   "id": "1312.5602",
+   "arxiv": "1312.5602",
+   "theme": "value",
+   "venue": "NeurIPS Deep Learning Workshop 2013",
+   "tags": [
+    "DQN",
+    "experience replay"
+   ],
+   "finding": "Deep Q-Networks learned Atari from pixels, using experience replay to stabilize Q-learning with a convolutional network.",
+   "lesson": "Replay buffers, and later target networks, were the first stability fixes for deep value learning.",
+   "title": "Playing Atari with Deep Reinforcement Learning",
+   "authors": [
+    "Volodymyr Mnih",
+    "Koray Kavukcuoglu",
+    "David Silver",
+    "Alex Graves",
+    "Ioannis Antonoglou",
+    "Daan Wierstra",
+    "Martin Riedmiller"
+   ],
+   "year": "2013",
+   "url": "https://arxiv.org/abs/1312.5602"
+  },
+  {
+   "id": "1802.09477",
+   "arxiv": "1802.09477",
+   "theme": "value",
+   "venue": "ICML 2018",
+   "tags": [
+    "TD3",
+    "overestimation"
+   ],
+   "finding": "TD3 counters overestimation bias in actor-critic methods with clipped double-Q learning, delayed policy updates and target policy smoothing.",
+   "lesson": "Value-estimation error compounds through bootstrapping. Stability comes from controlling it.",
+   "title": "Addressing Function Approximation Error in Actor-Critic Methods",
+   "authors": [
+    "Scott Fujimoto",
+    "Herke van Hoof",
+    "David Meger"
+   ],
+   "year": "2018",
+   "url": "https://arxiv.org/abs/1802.09477"
+  },
+  {
+   "id": "1812.02648",
+   "arxiv": "1812.02648",
+   "theme": "value",
+   "venue": "arXiv 2018",
+   "tags": [
+    "deadly triad",
+    "divergence"
+   ],
+   "finding": "Empirically studies the deadly triad (function approximation, bootstrapping, off-policy learning) in DQN variants. Unbounded divergence is rare, but soft divergence is common and depends on target networks, multi-step returns and prioritization.",
+   "lesson": "Divergence risk is a measurable function of design choices, not a fixed fact of the algorithm.",
+   "title": "Deep Reinforcement Learning and the Deadly Triad",
+   "authors": [
+    "Hado van Hasselt",
+    "Yotam Doron",
+    "Florian Strub",
+    "Matteo Hessel",
+    "Nicolas Sonnerat",
+    "Joseph Modayil"
+   ],
+   "year": "2018",
+   "url": "https://arxiv.org/abs/1812.02648"
+  },
+  {
+   "id": "1801.01290",
+   "arxiv": "1801.01290",
+   "theme": "value",
+   "venue": "ICML 2018",
+   "tags": [
+    "SAC",
+    "maximum entropy"
+   ],
+   "finding": "Soft Actor-Critic is an off-policy maximum-entropy actor-critic method that is notably more stable across seeds than earlier off-policy methods.",
+   "lesson": "An entropy bonus keeps the policy from collapsing early, much like the small policy-head init does at step zero.",
+   "title": "Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor",
+   "authors": [
+    "Tuomas Haarnoja",
+    "Aurick Zhou",
+    "Pieter Abbeel",
+    "Sergey Levine"
+   ],
+   "year": "2018",
+   "url": "https://arxiv.org/abs/1801.01290"
+  },
+  {
+   "id": "2010.14498",
+   "arxiv": "2010.14498",
+   "theme": "value",
+   "venue": "ICLR 2021",
+   "tags": [
+    "feature rank",
+    "implicit under-parameterization"
+   ],
+   "finding": "Shows that bootstrapped value learning progressively reduces the effective rank (srank) of learned features, and that this rank collapse correlates with poor performance.",
+   "lesson": "Introduces the srank metric that the demo plots as \"feature rank\".",
+   "title": "Implicit Under-Parameterization Inhibits Data-Efficient Deep Reinforcement Learning",
+   "authors": [
+    "Aviral Kumar",
+    "Rishabh Agarwal",
+    "Dibya Ghosh",
+    "Sergey Levine"
+   ],
+   "year": "2020",
+   "url": "https://arxiv.org/abs/2010.14498"
+  },
+  {
+   "id": "2003.06350",
+   "arxiv": "2003.06350",
+   "theme": "value",
+   "venue": "ICML 2020",
+   "tags": [
+    "TD learning",
+    "interference",
+    "generalization"
+   ],
+   "finding": "Finds that TD-trained networks show lower interference between states and worse generalization than regression-trained ones, and links this to how targets evolve over training.",
+   "lesson": "How the targets are produced shapes the representation the network learns.",
+   "title": "Interference and Generalization in Temporal Difference Learning",
+   "authors": [
+    "Emmanuel Bengio",
+    "Joelle Pineau",
+    "Doina Precup"
+   ],
+   "year": "2020",
+   "url": "https://arxiv.org/abs/2003.06350"
+  },
+  {
+   "id": "2007.06700",
+   "arxiv": "2007.06700",
+   "theme": "value",
+   "venue": "ICML 2020",
+   "tags": [
+    "experience replay",
+    "replay ratio"
+   ],
+   "finding": "Disentangles replay capacity from the age of the oldest policy in the buffer, and shows that n-step returns are key to benefiting from larger replay.",
+   "lesson": "Replay ratio and data age are stability levers as important as the network itself.",
+   "title": "Revisiting Fundamentals of Experience Replay",
+   "authors": [
+    "William Fedus",
+    "Prajit Ramachandran",
+    "Rishabh Agarwal",
+    "Yoshua Bengio",
+    "Hugo Larochelle",
+    "Mark Rowland",
+    "Will Dabney"
+   ],
+   "year": "2020",
+   "url": "https://arxiv.org/abs/2007.06700"
+  },
+  {
+   "id": "2112.04716",
+   "arxiv": "2112.04716",
+   "theme": "value",
+   "venue": "ICLR 2022",
+   "tags": [
+    "regularization",
+    "feature co-adaptation"
+   ],
+   "finding": "DR3 identifies implicit regularization in TD learning that makes features of consecutive state-action pairs co-adapt, and adds an explicit regularizer on their dot product.",
+   "lesson": "Value-based RL needs explicit regularization that supervised learning does not.",
+   "title": "DR3: Value-Based Deep Reinforcement Learning Requires Explicit Regularization",
+   "authors": [
+    "Aviral Kumar",
+    "Rishabh Agarwal",
+    "Tengyu Ma",
+    "Aaron Courville",
+    "George Tucker",
+    "Sergey Levine"
+   ],
+   "year": "2021",
+   "url": "https://arxiv.org/abs/2112.04716"
+  },
+  {
+   "id": "2110.14020",
+   "arxiv": "2110.14020",
+   "theme": "value",
+   "venue": "NeurIPS 2021",
+   "tags": [
+    "offline",
+    "tandem learning"
+   ],
+   "finding": "The tandem experiment: a passive agent trained on exactly the same data as an active agent still fails badly. The paper traces this mainly to function approximation interacting with the data distribution.",
+   "lesson": "Identical data and objectives can still give very different results: optimization dynamics matter, not only the data.",
+   "title": "The Difficulty of Passive Learning in Deep Reinforcement Learning",
+   "authors": [
+    "Georg Ostrovski",
+    "Pablo Samuel Castro",
+    "Will Dabney"
+   ],
+   "year": "2021",
+   "url": "https://arxiv.org/abs/2110.14020"
+  },
+  {
+   "id": "2403.05996",
+   "arxiv": "2403.05996",
+   "theme": "value",
+   "venue": "RLC 2024",
+   "tags": [
+    "high update ratio",
+    "value divergence"
+   ],
+   "finding": "At high update-to-data ratios, the main failure is not the primacy bias but divergence of Q-values driven by out-of-distribution action prediction. Normalizing the output features fixes much of it without resets.",
+   "lesson": "Some failures that resets were fixing can be prevented by architecture instead.",
+   "title": "Dissecting Deep RL with High Update Ratios: Combatting Value Divergence",
+   "authors": [
+    "Marcel Hussing",
+    "Claas Voelcker",
+    "Igor Gilitschenski",
+    "Amir-massoud Farahmand",
+    "Eric Eaton"
+   ],
+   "year": "2024",
+   "url": "https://arxiv.org/abs/2403.05996"
+  },
+  {
+   "id": "2407.04811",
+   "arxiv": "2407.04811",
+   "theme": "value",
+   "venue": "ICLR 2025",
+   "tags": [
+    "PQN",
+    "LayerNorm",
+    "TD convergence"
+   ],
+   "finding": "Proves that LayerNorm plus L2 regularization makes TD learning stable even off-policy, and builds PQN: a Q-learning agent with no target network or replay buffer, running in vectorized environments.",
+   "lesson": "Normalization can replace target networks as a stabilizer, which is a strong argument for architecture-level fixes.",
+   "title": "Simplifying Deep Temporal Difference Learning",
+   "authors": [
+    "Matteo Gallici",
+    "Mattie Fellows",
+    "Benjamin Ellis",
+    "Bartomeu Pou",
+    "Ivan Masmitja",
+    "Jakob Nicolaus Foerster",
+    "Mario Martin"
+   ],
+   "year": "2024",
+   "url": "https://arxiv.org/abs/2407.04811"
+  },
+  {
+   "id": "2403.03950",
+   "arxiv": "2403.03950",
+   "theme": "value",
+   "venue": "ICML 2024",
+   "tags": [
+    "classification loss",
+    "scaling"
+   ],
+   "finding": "Training value functions with a cross-entropy loss over binned returns (HL-Gauss) instead of MSE regression scales better and is more robust to noisy targets.",
+   "lesson": "Changing the loss's geometry can remove a whole class of value-learning instabilities.",
+   "title": "Stop Regressing: Training Value Functions via Classification for Scalable Deep RL",
+   "authors": [
+    "Jesse Farebrother",
+    "Jordi Orbay",
+    "Quan Vuong",
+    "Adrien Ali Taïga",
+    "Yevgen Chebotar",
+    "Ted Xiao",
+    "Alex Irpan",
+    "Sergey Levine",
+    "Pablo Samuel Castro",
+    "Aleksandra Faust",
+    "Aviral Kumar",
+    "Rishabh Agarwal"
+   ],
+   "year": "2024",
+   "url": "https://arxiv.org/abs/2403.03950"
+  },
+  {
+   "id": "2006.05826",
+   "arxiv": "2006.05826",
+   "theme": "plasticity",
+   "venue": "ICLR 2021",
+   "tags": [
+    "non-stationarity",
+    "generalization",
+    "distillation"
+   ],
+   "finding": "Shows that transient non-stationarity early in RL training permanently hurts generalization. ITER periodically distills the agent into a freshly initialized network.",
+   "lesson": "Re-initializing and distilling can undo damage that early training left behind.",
+   "title": "Transient Non-Stationarity and Generalisation in Deep Reinforcement Learning",
+   "authors": [
+    "Maximilian Igl",
+    "Gregory Farquhar",
+    "Jelena Luketina",
+    "Wendelin Boehmer",
+    "Shimon Whiteson"
+   ],
+   "year": "2020",
+   "url": "https://arxiv.org/abs/2006.05826"
+  },
+  {
+   "id": "2204.09560",
+   "arxiv": "2204.09560",
+   "theme": "plasticity",
+   "venue": "ICLR 2022",
+   "tags": [
+    "capacity loss",
+    "InFeR"
+   ],
+   "finding": "Shows that networks trained on sequences of targets lose capacity to fit new ones, measured by feature rank. InFeR regresses some outputs toward their values at initialization to preserve capacity.",
+   "lesson": "Staying close to initialization's function preserves plasticity, which makes the init a resource to protect.",
+   "title": "Understanding and Preventing Capacity Loss in Reinforcement Learning",
+   "authors": [
+    "Clare Lyle",
+    "Mark Rowland",
+    "Will Dabney"
+   ],
+   "year": "2022",
+   "url": "https://arxiv.org/abs/2204.09560"
+  },
+  {
+   "id": "2310.19668",
+   "arxiv": "2310.19668",
+   "theme": "plasticity",
+   "venue": "ICLR 2024",
+   "tags": [
+    "dormant ratio",
+    "visual RL",
+    "exploration"
+   ],
+   "finding": "DrM shows that the dormant ratio in visual RL agents tracks exploration and performance, and uses it to drive perturbation, exploration and exploitation schedules.",
+   "lesson": "Network-health metrics can act as control signals, not just diagnostics.",
+   "title": "DrM: Mastering Visual Reinforcement Learning through Dormant Ratio Minimization",
+   "authors": [
+    "Guowei Xu",
+    "Ruijie Zheng",
+    "Yongyuan Liang",
+    "Xiyao Wang",
+    "Zhecheng Yuan",
+    "Tianying Ji",
+    "Yu Luo",
+    "Xiaoyu Liu",
+    "Jiaxin Yuan",
+    "Pu Hua",
+    "Shuzhen Li",
+    "Yanjie Ze",
+    "Hal Daumé",
+    "Furong Huang",
+    "Huazhe Xu"
+   ],
+   "year": "2023",
+   "url": "https://arxiv.org/abs/2310.19668"
+  },
+  {
+   "id": "2303.07507",
+   "arxiv": "2303.07507",
+   "theme": "plasticity",
+   "venue": "CoLLAs 2023",
+   "tags": [
+    "continual RL",
+    "CReLU"
+   ],
+   "finding": "Shows plasticity loss in continual deep RL on Atari and connects it to activation-footprint changes. Concatenated ReLUs (CReLU) mitigate it.",
+   "lesson": "Activation choice affects how quickly units die. The demo lets you switch tanh and ReLU.",
+   "title": "Loss of Plasticity in Continual Deep Reinforcement Learning",
+   "authors": [
+    "Zaheer Abbas",
+    "Rosie Zhao",
+    "Joseph Modayil",
+    "Adam White",
+    "Marlos C. Machado"
+   ],
+   "year": "2023",
+   "url": "https://arxiv.org/abs/2303.07507"
+  },
+  {
+   "id": "2306.13812",
+   "arxiv": "2306.13812",
+   "theme": "plasticity",
+   "venue": "Nature 2024",
+   "tags": [
+    "continual learning",
+    "continual backprop"
+   ],
+   "finding": "Demonstrates large-scale loss of plasticity under continual learning with standard deep learning (including on ImageNet-derived tasks and in RL) and proposes continual backpropagation, which keeps re-initializing a small fraction of low-utility units.",
+   "lesson": "Initialization is not a one-time event. Injecting fresh random units keeps a network trainable.",
+   "title": "Maintaining Plasticity in Deep Continual Learning",
+   "authors": [
+    "Shibhansh Dohare",
+    "J. Fernando Hernandez-Garcia",
+    "Parash Rahman",
+    "A. Rupam Mahmood",
+    "Richard S. Sutton"
+   ],
+   "year": "2023",
+   "url": "https://arxiv.org/abs/2306.13812"
+  },
+  {
+   "id": "2306.10711",
+   "arxiv": "2306.10711",
+   "theme": "plasticity",
+   "venue": "NeurIPS 2023",
+   "tags": [
+    "input plasticity",
+    "label plasticity"
+   ],
+   "finding": "Separates input plasticity (adapting to new inputs) from label plasticity (adapting to new targets) and combines SAM, LayerNorm, CReLU and resets in PLASTIC.",
+   "lesson": "Different remedies target different parts of the problem, so they combine well.",
+   "title": "PLASTIC: Improving Input and Label Plasticity for Sample Efficient Reinforcement Learning",
+   "authors": [
+    "Hojoon Lee",
+    "Hanseul Cho",
+    "Hyunseung Kim",
+    "Daehoon Gwak",
+    "Joonkee Kim",
+    "Jaegul Choo",
+    "Se-Young Yun",
+    "Chulhee Yun"
+   ],
+   "year": "2023",
+   "url": "https://arxiv.org/abs/2306.10711"
+  },
+  {
+   "id": "2302.12902",
+   "arxiv": "2302.12902",
+   "theme": "plasticity",
+   "venue": "ICML 2023",
+   "tags": [
+    "dormant neurons",
+    "ReDo"
+   ],
+   "finding": "Defines tau-dormant neurons (normalized mean activation at or below tau) and shows their fraction grows during deep RL training. ReDo recycles them by re-initializing their incoming weights and zeroing their outgoing weights.",
+   "lesson": "The demo's dormant-fraction chart uses this definition directly.",
+   "title": "The Dormant Neuron Phenomenon in Deep Reinforcement Learning",
+   "authors": [
+    "Ghada Sokar",
+    "Rishabh Agarwal",
+    "Pablo Samuel Castro",
+    "Utku Evci"
+   ],
+   "year": "2023",
+   "url": "https://arxiv.org/abs/2302.12902"
+  },
+  {
+   "id": "2303.01486",
+   "arxiv": "2303.01486",
+   "theme": "plasticity",
+   "venue": "ICML 2023",
+   "tags": [
+    "plasticity",
+    "loss landscape"
+   ],
+   "finding": "Finds that plasticity loss is best explained by changes in loss-landscape curvature rather than by weight norm or rank alone, and shows LayerNorm is a strong mitigation.",
+   "lesson": "No single scalar metric predicts plasticity loss. The demo plots several for this reason.",
+   "title": "Understanding plasticity in neural networks",
+   "authors": [
+    "Clare Lyle",
+    "Zeyu Zheng",
+    "Evgenii Nikishin",
+    "Bernardo Avila Pires",
+    "Razvan Pascanu",
+    "Will Dabney"
+   ],
+   "year": "2023",
+   "url": "https://arxiv.org/abs/2303.01486"
+  },
+  {
+   "id": "2402.18762",
+   "arxiv": "2402.18762",
+   "theme": "plasticity",
+   "venue": "ICML 2024",
+   "tags": [
+    "plasticity",
+    "normalization",
+    "weight decay"
+   ],
+   "finding": "Disentangles several independent causes of plasticity loss (preactivation shift, unit saturation and dormancy, growing parameter norms) and shows that layer normalization plus weight decay together are robust across settings.",
+   "lesson": "Combine a normalization layer with norm control instead of looking for a single fix.",
+   "title": "Disentangling the Causes of Plasticity Loss in Neural Networks",
+   "authors": [
+    "Clare Lyle",
+    "Zeyu Zheng",
+    "Khimya Khetarpal",
+    "Hado van Hasselt",
+    "Razvan Pascanu",
+    "James Martens",
+    "Will Dabney"
+   ],
+   "year": "2024",
+   "url": "https://arxiv.org/abs/2402.18762"
+  },
+  {
+   "id": "2407.01800",
+   "arxiv": "2407.01800",
+   "theme": "plasticity",
+   "venue": "NeurIPS 2024",
+   "tags": [
+    "normalization",
+    "effective learning rate"
+   ],
+   "finding": "Shows that with normalization layers, growing parameter norms silently shrink the effective learning rate. Normalize-and-Project keeps the effective step size constant.",
+   "lesson": "The weight-norm chart in the demo is about this effect, which is invisible in the loss curve.",
+   "title": "Normalization and effective learning rates in reinforcement learning",
+   "authors": [
+    "Clare Lyle",
+    "Zeyu Zheng",
+    "Khimya Khetarpal",
+    "James Martens",
+    "Hado van Hasselt",
+    "Razvan Pascanu",
+    "Will Dabney"
+   ],
+   "year": "2024",
+   "url": "https://arxiv.org/abs/2407.01800"
+  },
+  {
+   "id": "1412.6980",
+   "arxiv": "1412.6980",
+   "theme": "reset",
+   "venue": "ICLR 2015",
+   "tags": [
+    "Adam",
+    "optimizer"
+   ],
+   "finding": "Adam combines momentum with per-parameter adaptive step sizes from bias-corrected first and second moment estimates.",
+   "lesson": "Adam's epsilon and moment state interact with init scale. RL code commonly uses epsilon = 1e-5, as the demo does.",
+   "title": "Adam: A Method for Stochastic Optimization",
+   "authors": [
+    "Diederik P. Kingma",
+    "Jimmy Ba"
+   ],
+   "year": "2014",
+   "url": "https://arxiv.org/abs/1412.6980"
+  },
+  {
+   "id": "1910.08475",
+   "arxiv": "1910.08475",
+   "theme": "reset",
+   "venue": "NeurIPS 2020",
+   "tags": [
+    "warm starting",
+    "shrink and perturb"
+   ],
+   "finding": "Warm-starting from a model trained on part of the data generalizes worse than training from scratch. Shrink-and-perturb (scale weights down, add noise) recovers most of the gap.",
+   "lesson": "Partially moving weights back toward a random init is a simple, general plasticity fix.",
+   "title": "On Warm-Starting Neural Network Training",
+   "authors": [
+    "Jordan T. Ash",
+    "Ryan P. Adams"
+   ],
+   "year": "2019",
+   "url": "https://arxiv.org/abs/1910.08475"
+  },
+  {
+   "id": "2202.00155",
+   "arxiv": "2202.00155",
+   "theme": "reset",
+   "venue": "ICLR 2022",
+   "tags": [
+    "forgetting",
+    "later-layer resets"
+   ],
+   "finding": "Shows that repeatedly forgetting and relearning, by resetting later layers, steers networks toward better generalizing solutions.",
+   "lesson": "Controlled re-initialization can act as a regularizer.",
+   "title": "Fortuitous Forgetting in Connectionist Networks",
+   "authors": [
+    "Hattie Zhou",
+    "Ankit Vani",
+    "Hugo Larochelle",
+    "Aaron Courville"
+   ],
+   "year": "2022",
+   "url": "https://arxiv.org/abs/2202.00155"
+  },
+  {
+   "id": "2205.07802",
+   "arxiv": "2205.07802",
+   "theme": "reset",
+   "venue": "ICML 2022",
+   "tags": [
+    "primacy bias",
+    "resets"
+   ],
+   "finding": "Identifies the primacy bias, a tendency to overfit early experience, and shows that periodically resetting the last layers of the network, while keeping the replay buffer, improves sample efficiency substantially.",
+   "lesson": "Re-initialization during training can beat continuous training. This is the foundation for most later reset work.",
+   "title": "The Primacy Bias in Deep Reinforcement Learning",
+   "authors": [
+    "Evgenii Nikishin",
+    "Max Schwarzer",
+    "Pierluca D'Oro",
+    "Pierre-Luc Bacon",
+    "Aaron Courville"
+   ],
+   "year": "2022",
+   "url": "https://arxiv.org/abs/2205.07802"
+  },
+  {
+   "id": "2305.19452",
+   "arxiv": "2305.19452",
+   "theme": "reset",
+   "venue": "ICML 2023",
+   "tags": [
+    "BBF",
+    "resets",
+    "scaling"
+   ],
+   "finding": "Bigger, Better, Faster reaches human-level Atari 100k performance by scaling the network, using shrink-and-perturb resets, annealing n-step and discount, and using weight decay.",
+   "lesson": "Resets are what make larger networks and high replay ratios usable.",
+   "title": "Bigger, Better, Faster: Human-level Atari with human-level efficiency",
+   "authors": [
+    "Max Schwarzer",
+    "Johan Obando-Ceron",
+    "Aaron Courville",
+    "Marc Bellemare",
+    "Rishabh Agarwal",
+    "Pablo Samuel Castro"
+   ],
+   "year": "2023",
+   "url": "https://arxiv.org/abs/2305.19452"
+  },
+  {
+   "id": "2305.15555",
+   "arxiv": "2305.15555",
+   "theme": "reset",
+   "venue": "NeurIPS 2023",
+   "tags": [
+    "plasticity injection"
+   ],
+   "finding": "Plasticity injection adds a freshly initialized copy of the head and subtracts a frozen copy, so plasticity increases without changing the network's current output or adding trainable parameters permanently.",
+   "lesson": "Fresh random weights can be added without a performance drop.",
+   "title": "Deep Reinforcement Learning with Plasticity Injection",
+   "authors": [
+    "Evgenii Nikishin",
+    "Junhyuk Oh",
+    "Georg Ostrovski",
+    "Clare Lyle",
+    "Razvan Pascanu",
+    "Will Dabney",
+    "André Barreto"
+   ],
+   "year": "2023",
+   "url": "https://arxiv.org/abs/2305.15555"
+  },
+  {
+   "id": "2308.11958",
+   "arxiv": "2308.11958",
+   "theme": "reset",
+   "venue": "arXiv 2023",
+   "tags": [
+    "L2 init",
+    "regenerative regularization"
+   ],
+   "finding": "L2 Init regularizes parameters toward their initial values instead of toward zero, maintaining plasticity in continual learning more simply than resets.",
+   "lesson": "The initial weights are a good anchor to return to.",
+   "title": "Maintaining Plasticity in Continual Learning via Regenerative Regularization",
+   "authors": [
+    "Saurabh Kumar",
+    "Henrik Marklund",
+    "Benjamin Van Roy"
+   ],
+   "year": "2023",
+   "url": "https://arxiv.org/abs/2308.11958"
+  },
+  {
+   "id": "2306.17833",
+   "arxiv": "2306.17833",
+   "theme": "reset",
+   "venue": "NeurIPS 2023",
+   "tags": [
+    "optimizer state",
+    "Adam"
+   ],
+   "finding": "Resetting Adam's moment estimates whenever the target network updates significantly improves Rainbow on Atari, because stale moments from earlier targets corrupt new updates.",
+   "lesson": "Optimizer state is part of what has to be re-initialized.",
+   "title": "Resetting the Optimizer in Deep RL: An Empirical Study",
+   "authors": [
+    "Kavosh Asadi",
+    "Rasool Fakoor",
+    "Shoham Sabach"
+   ],
+   "year": "2023",
+   "url": "https://arxiv.org/abs/2306.17833"
+  },
+  {
+   "id": "2404.00781",
+   "arxiv": "2404.00781",
+   "theme": "reset",
+   "venue": "ICLR 2024",
+   "tags": [
+    "UPGD",
+    "continual learning"
+   ],
+   "finding": "Utility-based perturbed gradient descent protects useful units and perturbs less useful ones, addressing both plasticity loss and catastrophic forgetting.",
+   "lesson": "Targeted, utility-aware perturbation beats uniform resets when old knowledge matters.",
+   "title": "Addressing Loss of Plasticity and Catastrophic Forgetting in Continual Learning",
+   "authors": [
+    "Mohamed Elsayed",
+    "A. Rupam Mahmood"
+   ],
+   "year": "2024",
+   "url": "https://arxiv.org/abs/2404.00781"
+  },
+  {
+   "id": "2406.06811",
+   "arxiv": "2406.06811",
+   "theme": "reset",
+   "venue": "arXiv 2024",
+   "tags": [
+    "spectral regularization",
+    "continual learning"
+   ],
+   "finding": "Spectral regularization keeps each layer's largest singular value near 1, preserving the gradient-propagation properties of the initialization and so maintaining trainability over long task sequences.",
+   "lesson": "Instead of resetting weights, preserve the property of the initialization that matters: its spectrum.",
+   "title": "Learning Continually by Spectral Regularization",
+   "authors": [
+    "Alex Lewandowski",
+    "Michał Bortkiewicz",
+    "Saurabh Kumar",
+    "András György",
+    "Dale Schuurmans",
+    "Mateusz Ostaszewski",
+    "Marlos C. Machado"
+   ],
+   "year": "2024",
+   "url": "https://arxiv.org/abs/2406.06811"
+  },
+  {
+   "id": "2411.04034",
+   "arxiv": "2411.04034",
+   "theme": "reset",
+   "venue": "arXiv 2024",
+   "tags": [
+    "soft reset",
+    "non-stationarity"
+   ],
+   "finding": "Models parameter drift toward the initialization as an Ornstein-Uhlenbeck process with a learned drift rate, which gives soft, adaptive resets under non-stationarity.",
+   "lesson": "Reset strength can be learned instead of scheduled by hand.",
+   "title": "Non-Stationary Learning of Neural Networks with Automatic Soft Parameter Reset",
+   "authors": [
+    "Alexandre Galashov",
+    "Michalis K. Titsias",
+    "András György",
+    "Clare Lyle",
+    "Razvan Pascanu",
+    "Yee Whye Teh",
+    "Maneesh Sahani"
+   ],
+   "year": "2024",
+   "url": "https://arxiv.org/abs/2411.04034"
+  },
+  {
+   "id": "2010.09163",
+   "arxiv": "2010.09163",
+   "theme": "arch",
+   "venue": "arXiv 2020",
+   "tags": [
+    "D2RL",
+    "dense connections"
+   ],
+   "finding": "Feeds the state input into every hidden layer (dense connections), which helps deeper actor-critic networks train in continuous control.",
+   "lesson": "Skip connections ease the gradient-flow problems that limit depth in RL.",
+   "title": "D2RL: Deep Dense Architectures in Reinforcement Learning",
+   "authors": [
+    "Samarth Sinha",
+    "Homanga Bharadhwaj",
+    "Aravind Srinivas",
+    "Animesh Garg"
+   ],
+   "year": "2020",
+   "url": "https://arxiv.org/abs/2010.09163"
+  },
+  {
+   "id": "2105.05246",
+   "arxiv": "2105.05246",
+   "theme": "arch",
+   "venue": "ICML 2021",
+   "tags": [
+    "spectral normalization",
+    "optimization"
+   ],
+   "finding": "Shows that spectral normalization's benefit in DQN-style agents comes mostly from its effect on optimization (an effective step size), not from smoothness. Proposes cheaper alternatives.",
+   "lesson": "Many stabilizers work by changing effective learning rates.",
+   "title": "Spectral Normalisation for Deep Reinforcement Learning: an Optimisation Perspective",
+   "authors": [
+    "Florin Gogianu",
+    "Tudor Berariu",
+    "Mihaela Rosca",
+    "Claudia Clopath",
+    "Lucian Busoniu",
+    "Razvan Pascanu"
+   ],
+   "year": "2021",
+   "url": "https://arxiv.org/abs/2105.05246"
+  },
+  {
+   "id": "2106.01151",
+   "arxiv": "2106.01151",
+   "theme": "arch",
+   "venue": "ICML 2021",
+   "tags": [
+    "spectral normalization",
+    "depth"
+   ],
+   "finding": "Spectral normalization lets much deeper and wider networks be used in SAC-style agents, where unnormalized large networks would otherwise destabilize.",
+   "lesson": "Smoothness constraints, not just init, unlock depth in RL.",
+   "title": "Towards Deeper Deep Reinforcement Learning with Spectral Normalization",
+   "authors": [
+    "Johan Bjorck",
+    "Carla P. Gomes",
+    "Kilian Q. Weinberger"
+   ],
+   "year": "2021",
+   "url": "https://arxiv.org/abs/2106.01151"
+  },
+  {
+   "id": "2102.07920",
+   "arxiv": "2102.07920",
+   "theme": "arch",
+   "venue": "arXiv 2021",
+   "tags": [
+    "larger networks",
+    "decoupled representation"
+   ],
+   "finding": "Shows that naively enlarging RL networks hurts, and gets gains by decoupling representation learning from RL and using DenseNet-style connections plus distributed training.",
+   "lesson": "Scaling RL networks needs both architecture and training-procedure changes.",
+   "title": "Training Larger Networks for Deep Reinforcement Learning",
+   "authors": [
+    "Kei Ota",
+    "Devesh K. Jha",
+    "Asako Kanezaki"
+   ],
+   "year": "2021",
+   "url": "https://arxiv.org/abs/2102.07920"
+  },
+  {
+   "id": "2301.04104",
+   "arxiv": "2301.04104",
+   "theme": "arch",
+   "venue": "Nature 2025",
+   "tags": [
+    "DreamerV3",
+    "robustness",
+    "symlog"
+   ],
+   "finding": "DreamerV3 masters over 150 tasks with fixed hyperparameters using robustness techniques such as symlog predictions, LayerNorm, return normalization and zero-initialized output layers for some heads.",
+   "lesson": "One set of hyperparameters can work everywhere once scale is controlled at every interface.",
+   "title": "Mastering Diverse Domains through World Models",
+   "authors": [
+    "Danijar Hafner",
+    "Jurgis Pasukonis",
+    "Jimmy Ba",
+    "Timothy Lillicrap"
+   ],
+   "year": "2023",
+   "url": "https://arxiv.org/abs/2301.04104"
+  },
+  {
+   "id": "2405.16158",
+   "arxiv": "2405.16158",
+   "theme": "arch",
+   "venue": "NeurIPS 2024",
+   "tags": [
+    "BRO",
+    "scaling",
+    "optimism"
+   ],
+   "finding": "BRO scales the critic with LayerNorm and residual blocks, uses strong regularization and resets, and adds optimistic exploration, reaching state-of-the-art continuous control.",
+   "lesson": "Scaling up only works once normalization and resets keep training stable.",
+   "title": "Bigger, Regularized, Optimistic: scaling for compute and sample-efficient continuous control",
+   "authors": [
+    "Michal Nauman",
+    "Mateusz Ostaszewski",
+    "Krzysztof Jankowski",
+    "Piotr Miłoś",
+    "Marek Cygan"
+   ],
+   "year": "2024",
+   "url": "https://arxiv.org/abs/2405.16158"
+  },
+  {
+   "id": "1902.05605",
+   "arxiv": "1902.05605",
+   "theme": "arch",
+   "venue": "ICLR 2024",
+   "tags": [
+    "CrossQ",
+    "BatchNorm",
+    "target networks"
+   ],
+   "finding": "CrossQ removes target networks and uses carefully applied batch normalization, joint forward passes of current and next states and wider critics, matching REDQ/DroQ sample efficiency at a low update ratio.",
+   "lesson": "With the right normalization, the classic stabilizers (target nets, high UTD) can be dropped.",
+   "title": "CrossQ: Batch Normalization in Deep Reinforcement Learning for Greater Sample Efficiency and Simplicity",
+   "authors": [
+    "Aditya Bhatt",
+    "Daniel Palenicek",
+    "Boris Belousov",
+    "Max Argus",
+    "Artemij Amiranashvili",
+    "Thomas Brox",
+    "Jan Peters"
+   ],
+   "year": "2024",
+   "url": "https://arxiv.org/abs/1902.05605"
+  },
+  {
+   "id": "2402.12479",
+   "arxiv": "2402.12479",
+   "theme": "arch",
+   "venue": "ICML 2024",
+   "tags": [
+    "pruning",
+    "sparsity"
+   ],
+   "finding": "Gradual magnitude pruning makes value-based agents perform better as networks grow, where dense scaling usually hurts.",
+   "lesson": "Bigger dense networks are harder to keep stable in RL, so sparsity is an alternative route.",
+   "title": "In value-based deep reinforcement learning, a pruned network is a good network",
+   "authors": [
+    "Johan Obando-Ceron",
+    "Aaron Courville",
+    "Pablo Samuel Castro"
+   ],
+   "year": "2024",
+   "url": "https://arxiv.org/abs/2402.12479"
+  },
+  {
+   "id": "2402.08609",
+   "arxiv": "2402.08609",
+   "theme": "arch",
+   "venue": "ICML 2024",
+   "tags": [
+    "mixture of experts",
+    "scaling"
+   ],
+   "finding": "Soft mixture-of-experts layers in value-based agents give performance that improves with parameter count, along with fewer dormant neurons and more stable feature rank.",
+   "lesson": "Architecture changes show up directly in the plasticity metrics.",
+   "title": "Mixtures of Experts Unlock Parameter Scaling for Deep RL",
+   "authors": [
+    "Johan Obando-Ceron",
+    "Ghada Sokar",
+    "Timon Willi",
+    "Clare Lyle",
+    "Jesse Farebrother",
+    "Jakob Foerster",
+    "Gintare Karolina Dziugaite",
+    "Doina Precup",
+    "Pablo Samuel Castro"
+   ],
+   "year": "2024",
+   "url": "https://arxiv.org/abs/2402.08609"
+  },
+  {
+   "id": "2403.00514",
+   "arxiv": "2403.00514",
+   "theme": "arch",
+   "venue": "ICML 2024",
+   "tags": [
+    "regularization",
+    "actor-critic",
+    "large study"
+   ],
+   "finding": "Benchmarks over 60 off-policy agents built from combinations of regularization and plasticity interventions across 14 tasks. Generic network regularization such as LayerNorm, together with resets, does as well as RL-specific tricks.",
+   "lesson": "Practical RL stability benefits most from standard deep-learning regularizers.",
+   "title": "Overestimation, Overfitting, and Plasticity in Actor-Critic: the Bitter Lesson of Reinforcement Learning",
+   "authors": [
+    "Michal Nauman",
+    "Michał Bortkiewicz",
+    "Piotr Miłoś",
+    "Tomasz Trzciński",
+    "Mateusz Ostaszewski",
+    "Marek Cygan"
+   ],
+   "year": "2024",
+   "url": "https://arxiv.org/abs/2403.00514"
+  },
+  {
+   "id": "2410.09754",
+   "arxiv": "2410.09754",
+   "theme": "arch",
+   "venue": "ICLR 2025",
+   "tags": [
+    "SimBa",
+    "architecture",
+    "scaling"
+   ],
+   "finding": "SimBa combines running observation normalization, residual feedforward blocks and LayerNorm. The result has a simplicity bias that lets RL networks scale up in parameters without losing performance.",
+   "lesson": "The architecture's inductive bias, not only its init, decides whether bigger networks help in RL.",
+   "title": "SimBa: Simplicity Bias for Scaling Up Parameters in Deep Reinforcement Learning",
+   "authors": [
+    "Hojoon Lee",
+    "Dongyoon Hwang",
+    "Donghu Kim",
+    "Hyunseung Kim",
+    "Jun Jet Tai",
+    "Kaushik Subramanian",
+    "Peter R. Wurman",
+    "Jaegul Choo",
+    "Peter Stone",
+    "Takuma Seno"
+   ],
+   "year": "2024",
+   "url": "https://arxiv.org/abs/2410.09754"
+  },
+  {
+   "id": "2502.15280",
+   "arxiv": "2502.15280",
+   "theme": "arch",
+   "venue": "ICML 2025",
+   "tags": [
+    "SimbaV2",
+    "hyperspherical normalization"
+   ],
+   "finding": "SimbaV2 constrains weights and features to a hypersphere and uses distributional value estimation with reward scaling, which keeps effective learning rates stable as models and compute scale.",
+   "lesson": "Projecting weights onto a fixed norm directly removes the growing-weight-norm failure mode.",
+   "title": "Hyperspherical Normalization for Scalable Deep Reinforcement Learning",
+   "authors": [
+    "Hojoon Lee",
+    "Youngdo Lee",
+    "Takuma Seno",
+    "Donghu Kim",
+    "Peter Stone",
+    "Jaegul Choo"
+   ],
+   "year": "2025",
+   "url": "https://arxiv.org/abs/2502.15280"
+  },
+  {
+   "id": "2502.07523",
+   "arxiv": "2502.07523",
+   "theme": "arch",
+   "venue": "arXiv 2025",
+   "tags": [
+    "CrossQ",
+    "weight normalization",
+    "UTD scaling"
+   ],
+   "finding": "Adds weight normalization to CrossQ so it scales reliably to higher update-to-data ratios without resets.",
+   "lesson": "Norm control on weights complements batch normalization on activations.",
+   "title": "Scaling Off-Policy Reinforcement Learning with Batch and Weight Normalization",
+   "authors": [
+    "Daniel Palenicek",
+    "Florian Vogt",
+    "Joe Watson",
+    "Jan Peters"
+   ],
+   "year": "2025",
+   "url": "https://arxiv.org/abs/2502.07523"
+  },
+  {
+   "id": "2506.15544",
+   "arxiv": "2506.15544",
+   "theme": "arch",
+   "venue": "arXiv 2025",
+   "tags": [
+    "gradient flow",
+    "scaling"
+   ],
+   "finding": "Attributes the failure of naively scaled deep RL networks to non-stationarity combined with poor gradient flow, and stabilizes scaling with gradient-propagation-preserving architecture and optimizer changes.",
+   "lesson": "Signal propagation, the theme of the first section, returns as the main issue at scale.",
+   "title": "Stable Gradients for Stable Learning at Scale in Deep Reinforcement Learning",
+   "authors": [
+    "Roger Creus Castanyer",
+    "Johan Obando-Ceron",
+    "Lu Li",
+    "Pierre-Luc Bacon",
+    "Glen Berseth",
+    "Aaron Courville",
+    "Pablo Samuel Castro"
+   ],
+   "year": "2025",
+   "url": "https://arxiv.org/abs/2506.15544"
+  },
+  {
+   "id": "1709.06560",
+   "arxiv": "1709.06560",
+   "theme": "eval",
+   "venue": "AAAI 2018",
+   "tags": [
+    "reproducibility",
+    "seeds"
+   ],
+   "finding": "Shows that deep RL results vary hugely with random seeds, hyperparameters, network architecture and code base, so reported improvements are often not significant.",
+   "lesson": "Init effects must be judged across many seeds. The demo runs several seeds per scheme and shades their range.",
+   "title": "Deep Reinforcement Learning that Matters",
+   "authors": [
+    "Peter Henderson",
+    "Riashat Islam",
+    "Philip Bachman",
+    "Joelle Pineau",
+    "Doina Precup",
+    "David Meger"
+   ],
+   "year": "2017",
+   "url": "https://arxiv.org/abs/1709.06560"
+  },
+  {
+   "id": "2108.13264",
+   "arxiv": "2108.13264",
+   "theme": "eval",
+   "venue": "NeurIPS 2021",
+   "tags": [
+    "rliable",
+    "confidence intervals"
+   ],
+   "finding": "Argues that point estimates from few runs mislead, and recommends interquartile mean, stratified bootstrap confidence intervals and performance profiles (the rliable library).",
+   "lesson": "Report intervals over seeds, not single curves.",
+   "title": "Deep Reinforcement Learning at the Edge of the Statistical Precipice",
+   "authors": [
+    "Rishabh Agarwal",
+    "Max Schwarzer",
+    "Pablo Samuel Castro",
+    "Aaron Courville",
+    "Marc G. Bellemare"
+   ],
+   "year": "2021",
+   "url": "https://arxiv.org/abs/2108.13264"
+  }
+ ]
+}

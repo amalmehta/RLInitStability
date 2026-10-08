@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RL Stability Literature</title>
+  <meta name="description" content="A themed literature review of weight initialization, plasticity and training stability in deep reinforcement learning.">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="module" src="js/site.js"></script>
+  <script type="module" src="js/literature.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="index.html">RL Init and Stability</a>
+      <nav class="nav">
+        <a href="index.html">Overview</a>
+        <a href="literature.html" aria-current="page">Literature</a>
+        <a href="demo.html">Live lab</a>
+      </nav>
+      <button class="theme-toggle" type="button">Theme: system</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <h1>Literature review</h1>
+    <p class="lede">
+      A sweep of the research on how initialization, normalization and network health affect stability in deep RL, from the signal-propagation theory of 2010–2017 to the plasticity and scaling work of 2022–2025.
+      Each entry gives the paper's key finding and what it means in practice.
+    </p>
+
+    <section class="panel timeline" aria-labelledby="tl-title">
+      <h3 id="tl-title">Papers by year and theme</h3>
+      <p class="small muted">Each dot is a paper. Hover to see its title; click to jump to it.</p>
+      <div id="timeline"></div>
+    </section>
+
+    <div class="filters">
+      <input id="search" type="search" placeholder="Search titles, authors, findings, tags…" aria-label="Search papers">
+      <span id="result-count" class="count" aria-live="polite"></span>
+    </div>
+    <div id="theme-chips" class="checks" role="group" aria-label="Filter by theme"></div>
+
+    <div id="papers"></div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">Titles, authors and years come from the arXiv API (checked 2026-10-08). Summaries are this project's own. Source data: <a href="data/papers.json">papers.json</a>.</div>
+  </footer>
+</body>
+</html>

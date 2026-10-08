@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Init Stability Lab</title>
+  <meta name="description" content="Train PPO on CartPole in your browser and compare weight initialization schemes by return and network-health metrics.">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="module" src="js/site.js"></script>
+  <script type="module" src="js/demo.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="index.html">RL Init and Stability</a>
+      <nav class="nav">
+        <a href="index.html">Overview</a>
+        <a href="literature.html">Literature</a>
+        <a href="demo.html" aria-current="page">Live lab</a>
+      </nav>
+      <button class="theme-toggle" type="button">Theme: system</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <h1>Live lab</h1>
+    <p class="lede">
+      Train PPO agents on CartPole right here, one Web Worker per run, and compare how weight initialization changes both learning and the network's internal health.
+      Lines show the mean over seeds, and the shaded band shows the range from lowest to highest seed.
+    </p>
+
+    <section id="lab" aria-labelledby="lab-title">
+      <h2 id="lab-title">PPO on CartPole</h2>
+      <div class="panel">
+        <div class="field">
+          <span class="label">Init schemes</span>
+          <div id="scheme-checks" class="checks"></div>
+        </div>
+        <div class="controls" style="margin-top: 1rem">
+          <div class="field">
+            <label for="activation">Activation</label>
+            <select id="activation">
+              <option value="tanh" selected>tanh</option>
+              <option value="relu">ReLU</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="depth">Hidden layers</label>
+            <select id="depth">
+              <option value="2" selected>2</option>
+              <option value="4">4</option>
+              <option value="6">6</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="width">Width</label>
+            <select id="width">
+              <option value="32">32</option>
+              <option value="64" selected>64</option>
+              <option value="128">128</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="lr">Learning rate</label>
+            <select id="lr">
+              <option value="0.0003">3e-4</option>
+              <option value="0.001" selected>1e-3</option>
+              <option value="0.003">3e-3</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="steps">Env steps per run</label>
+            <select id="steps">
+              <option value="25088">25k</option>
+              <option value="50176" selected>50k</option>
+              <option value="100352">100k</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="seeds">Seeds per scheme</label>
+            <select id="seeds">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3" selected>3</option>
+              <option value="5">5</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="chip" style="text-transform: none; letter-spacing: 0; font-size: 0.875rem; margin: 0">
+              <input id="clip" type="checkbox" checked> Clip gradients at 0.5
+            </label>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button id="start" class="btn primary" type="button">Train</button>
+          <button id="stop" class="btn" type="button" disabled>Stop</button>
+          <span id="status" class="status" aria-live="polite">Pick schemes and press Train. A default run takes about a minute on a laptop.</span>
+        </div>
+        <div class="progress" aria-hidden="true"><div id="progress-bar"></div></div>
+      </div>
+
+      <div id="legend" class="legend" aria-label="Legend"></div>
+      <div class="lab">
+        <div id="charts" class="chart-grid"></div>
+        <aside class="panel viewer" aria-labelledby="viewer-title">
+          <h3 id="viewer-title">Watch a policy</h3>
+          <p class="small muted">Plays the latest snapshot of seed 1 for the chosen scheme.</p>
+          <canvas id="cartpole" width="560" height="320" aria-label="CartPole animation"></canvas>
+          <div class="field">
+            <label for="viewer-run">Scheme</label>
+            <select id="viewer-run"></select>
+          </div>
+          <p id="viewer-info" class="small muted" style="margin-top: 0.6rem">No policy yet.</p>
+        </aside>
+      </div>
+
+      <h3 style="margin-top: 1.5rem">Summary table</h3>
+      <div class="table-wrap"><table id="summary"></table></div>
+
+      <div class="metric-notes">
+        <div><b>Policy entropy at step 0</b> shows what the init already decided. ln 2 ≈ 0.69 means a uniform policy. Large or unscaled output weights start out nearly deterministic, so exploration begins from a biased policy.</div>
+        <div><b>Dormant and saturated units</b> are capacity the network cannot use: ReLU units that never fire, or tanh units pinned at ±1 where the gradient is near zero (Sokar et al. 2023; Lyle et al. 2024).</div>
+        <div><b>Weight norm</b> growth shrinks the effective learning rate and is a classic plasticity-loss symptom (Lyle et al. 2024). Unscaled inits start with a huge norm.</div>
+        <div><b>Feature rank (srank)</b> counts how many directions the last hidden layer really uses. Collapse correlates with poor value learning (Kumar et al. 2021; Moalla et al. 2024).</div>
+      </div>
+    </section>
+
+    <section id="signal" aria-labelledby="signal-title">
+      <h2 id="signal-title">Signal propagation at initialization</h2>
+      <p class="muted" style="max-width: 52rem">
+        Random inputs pass through a deep stack of identical layers before any training.
+        A good init keeps the activation spread and the gradient size roughly constant across depth.
+        A poor one makes them shrink (vanishing) or blow up (exploding) exponentially. Both are drawn on a log scale.
+        The two orthogonal schemes differ only in their output heads, so here they share one line.
+        Some lines overlap on purpose: on square layers Xavier and LeCun have the same variance, and orthogonal with gain √2 matches He's scale.
+      </p>
+      <div class="panel">
+        <div class="controls">
+          <div class="field">
+            <label for="sp-activation">Activation</label>
+            <select id="sp-activation">
+              <option value="tanh">tanh</option>
+              <option value="relu" selected>ReLU</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="sp-depth">Depth</label>
+            <select id="sp-depth">
+              <option value="10">10</option>
+              <option value="20" selected>20</option>
+              <option value="40">40</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="sp-width">Width</label>
+            <select id="sp-width">
+              <option value="64">64</option>
+              <option value="128" selected>128</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div id="sp-legend" class="legend"></div>
+      <div id="sp-charts" class="chart-grid"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">All computation runs locally in your browser. The PPO, CartPole and network code is plain JavaScript in <code>js/core/</code>.</div>
+  </footer>
+</body>
+</html>
