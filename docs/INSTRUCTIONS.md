@@ -3,8 +3,7 @@
 ## Requirements
 
 - A modern browser (Chrome, Edge, Safari 15+ or Firefox 114+) with module Web Workers.
-- Python 3.7+ or any other static file server, to serve the site.
-- Node.js 20+, only for the tests and the literature generator.
+- Node.js 20+, for the local server, the tests and the literature generator.
 
 There is nothing to install: no `npm install`, no build step.
 
@@ -14,8 +13,8 @@ There is nothing to install: no `npm install`, no build step.
 npm start
 ```
 
-Then open <http://localhost:8765>.
-`npm start` is just `python3 -m http.server 8765 --directory site`, so any static server pointed at `site/` works too.
+Then open the address it prints, normally <http://localhost:8765>. If that port is busy, the server moves to the next free one (8766, 8767 and so on) and prints which.
+Use `PORT=9000 npm start` to choose a port. Any other static server pointed at `site/` works too.
 Opening the HTML files directly (`file://`) does not work, because browsers block ES modules and workers there.
 
 ## Use it

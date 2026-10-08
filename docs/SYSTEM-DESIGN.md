@@ -126,5 +126,5 @@ Browser behavior (workers, charts, viewer, theme) was checked by hand in the des
 - Training speed depends on the machine: about 0.25 s per PPO update on a modern laptop core, and much slower under heavy load.
 - One environment per run, no observation normalization and no learning-rate annealing. This is a teaching implementation, not a benchmark one.
 - Health metrics are computed on the first 256 states of each rollout, for the actor only.
-- `file://` does not work, because ES modules and workers need HTTP. Use `npm start` or any static server.
+- `file://` does not work, because ES modules and workers need HTTP. Use `npm start`: a dependency-free Node server (`scripts/serve.mjs`) that falls back to the next free port and sends `no-cache` headers so edited modules are never served stale.
 - The literature sweep covers work up to mid-2025 and is curated, not exhaustive.

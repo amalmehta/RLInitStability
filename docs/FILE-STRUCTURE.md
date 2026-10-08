@@ -32,6 +32,7 @@
 │   ├── site.test.mjs             Literature data and page consistency
 │   └── fixtures/cartpole-gym.json  Reference trajectory recorded from Gym
 ├── scripts/
+│   ├── serve.mjs                 Local static server for site/ (npm start)
 │   ├── build-literature.mjs      papers.json → docs/LITERATURE.md
 │   └── make-cartpole-fixture.py  Records the Gym reference trajectory
 └── docs/

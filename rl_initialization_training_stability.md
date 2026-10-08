@@ -62,7 +62,7 @@ Decided without asking:
 - PPO defaults are cheaper than CleanRL's (512-step rollouts, 4 epochs, minibatch 128, lr 1e-3, 50k steps) so a comparison takes about a minute. The 10-epoch, 100k-step version took about 150 s per run.
 - Added a signal-propagation explorer to the demo page. It visualizes the init theory directly and costs under a second to compute.
 - CartPole is easy, so init effects show mainly in health metrics and early learning. The site says so, and the claims match measured runs: N(0,1) gives entropy 0.21 at step 0, 18% saturated tanh units and weight norm 68; ReLU with N(0,1) starts about 50% dormant and lags early. A 6-layer tanh net did not separate PyTorch-default from orthogonal init, so the site doesn't claim depth does.
-- The site is served at port 8765 (`npm start`), because 8000 was already taken on this machine.
+- `npm start` runs a small Node server on port 8765 that moves to the next free port if 8765 is busy. Ports 8000 and 8765 were both already taken on this machine.
 
 Proposals (not done):
 - Create a GitHub repo named RLInitStability and deploy the site with GitHub Pages.
@@ -88,3 +88,4 @@ CHANGELOG:
 - 2026-10-02 — added meta-instruction: every project has a system design doc at docs/SYSTEM-DESIGN.md
 - 2026-10-05 — added meta-instruction: applications include a settings button or tab
 - 2026-10-08 — built the website: literature review (68 papers), live PPO lab, signal-propagation explorer, tests and docs
+- 2026-10-08 — npm start now uses a Node server that falls back to a free port (8765 was taken)
