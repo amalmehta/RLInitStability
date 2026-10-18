@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- RL Init and Stability: a training curve whose swings die down and settle. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#EEF7F1"/>
+      <stop offset="1" stop-color="#C6E5D2"/>
+    </linearGradient>
+  </defs>
+  <rect x="24" y="24" width="976" height="976" rx="220" fill="url(#bg)"/>
+  <path d="M170 512 C215 210 295 210 335 512 C375 780 445 780 485 512 C515 350 565 350 595 512 C620 600 655 600 685 512 C710 455 750 512 790 512"
+        fill="none" stroke="#1F5E4A" stroke-width="64" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="830" cy="512" r="52" fill="#D6455D"/>
+</svg>
