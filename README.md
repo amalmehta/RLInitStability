@@ -10,6 +10,7 @@ A website with a literature review of 68 papers on how weight initialization and
 
 ## Links
 
+- [The website](https://amalmehta.github.io/RLInitStability/): the literature review and the live lab
 - [Instructions](docs/INSTRUCTIONS.md): run it (`npm start`), use it, test it (`npm test`)
 - [Literature review](docs/LITERATURE.md): the full review, readable on GitHub
 - [System design](docs/SYSTEM-DESIGN.md): architecture, flows, decisions, known limits
